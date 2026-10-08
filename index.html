@@ -3627,7 +3627,7 @@ function showLoginScreen(){
   const el=document.getElementById("login-screen");
   if(!el) return;
   el.classList.remove("hidden");
-  el.style.display="grid";
+  el.style.display="flex";
 }
 function findLoginUser(users, username, password, hash){
   username=(username||"").toLowerCase();
@@ -5249,14 +5249,27 @@ function toast(msg,type=""){const el=document.getElementById("toast");el.textCon
 function updateClock(){const el=document.getElementById("clock");if(el)el.textContent=new Date().toLocaleString("en-IN",{weekday:"short",day:"numeric",month:"short",year:"numeric",hour:"2-digit",minute:"2-digit"})}
 document.getElementById("edit-modal").addEventListener("click",function(e){if(e.target===this)closeModal()});
 (async function init(){
-await ensureHashedUsers();
-getLeads();
-const session=getSession();
-if(session){
-  const u=getUsers().find(x=>x.username===session.username&&x.active);
-  if(u){setSession({id:u.id,username:u.username,name:u.name,role:u.role,canAdd:!!u.canAdd,canEdit:u.canEdit!==false,canExport:!!u.canExport});afterLoginSuccess()}
-}
-updateClock();setInterval(updateClock,30000);
+try{
+  await ensureHashedUsers();
+  getLeads();
+  const session=getSession();
+  if(session){
+    const u=getUsers().find(x=>x.username===session.username&&x.active!==false);
+    if(u){setSession({id:u.id,username:u.username,name:u.name,role:u.role,canAdd:!!u.canAdd,canEdit:u.canEdit!==false,canExport:!!u.canExport});afterLoginSuccess();return}
+  }
+}catch(ex){ console.error(ex); }
+try{
+  const err=document.getElementById("login-error");
+  if(err){ err.style.display="none"; err.textContent=""; }
+  showLoginScreen();
+  const app=document.getElementById("app");
+  if(app) app.style.display="none";
+  const gate=document.getElementById("attendance-gate");
+  if(gate) gate.style.display="none";
+  const lock=document.getElementById("monitor-lock");
+  if(lock) lock.style.display="none";
+}catch(ex){ console.error(ex); }
+try{ updateClock(); setInterval(updateClock,30000); }catch(ex){}
 })();
 </script>
 
