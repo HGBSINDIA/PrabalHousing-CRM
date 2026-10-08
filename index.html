@@ -38,6 +38,13 @@ body{font-family:'Segoe UI',Georgia,'Palatino Linotype',system-ui,sans-serif;bac
 .nav button.active{color:var(--primary);border-bottom-color:var(--primary)}
 .nav button.hidden{display:none}
 .main{padding:24px 28px;max-width:1440px;margin:0 auto}
+
+.crm-board{display:grid;grid-template-columns:1.2fr .8fr;gap:14px;margin:14px 0}
+.crm-bar{display:flex;align-items:center;gap:8px;margin:8px 0;font-size:.85rem}
+.crm-bar .track{flex:1;height:10px;background:#E6DCC6;border-radius:99px;overflow:hidden}
+.crm-bar .fill{height:100%;border-radius:99px}
+.crm-stat{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #E6DCC6;font-size:.88rem}
+@media(max-width:900px){.crm-board{grid-template-columns:1fr}}
 .kpi-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:14px;margin-bottom:24px}
 .kpi{background:var(--card);border-radius:12px;padding:16px;text-align:center;box-shadow:var(--shadow);border-left:4px solid var(--primary)}
 .kpi .value{font-size:1.7rem;font-weight:700;color:var(--primary)}
@@ -602,6 +609,26 @@ Sales Person: <code>sales1</code> / <code>sales1</code></div></details>
 </div>
 
 <div class="kpi-row" id="kpi-row"></div>
+
+<div class="crm-board" id="crm-board">
+  <div class="card">
+    <h2>Pipeline</h2>
+    <div id="crm-pipeline"></div>
+  </div>
+  <div class="card">
+    <h2>Today</h2>
+    <div id="crm-today"></div>
+  </div>
+  <div class="card">
+    <h2>Recent leads</h2>
+    <div class="table-wrap"><table><thead><tr><th>Lead</th><th>Status</th><th>Owner</th></tr></thead><tbody id="crm-recent"></tbody></table></div>
+  </div>
+  <div class="card">
+    <h2>Team snapshot</h2>
+    <div id="crm-team"></div>
+  </div>
+</div>
+
 
 <div class="card nature-view" id="nature-view-card">
   <h2>🌿 Nature View from High-Rise Apartment</h2>
@@ -4073,7 +4100,41 @@ function paintDashHero(){
   }
 
 }
+
+function renderCrmBoard(){
+  const leads=visibleLeads();
+  const total=Math.max(leads.length,1);
+  const rows=[
+    ["New Lead", leads.filter(l=>canonicalStatus(l.status)==="New Lead").length, "#1A4A73"],
+    ["Follow-Up", leads.filter(l=>canonicalStatus(l.status)==="Follow-Up").length, "#C9A227"],
+    ["Booked Lead", leads.filter(l=>isBookedStatus(l.status)).length, "#1E8449"],
+    ["Dropped Lead", leads.filter(l=>isDroppedStatus(l.status)).length, "#922B21"]
+  ];
+  const pipe=document.getElementById("crm-pipeline");
+  if(pipe) pipe.innerHTML=rows.map(([n,c,col])=>`<div class="crm-bar"><span style="width:110px">${n}</span><div class="track"><div class="fill" style="width:${Math.round(c/total*100)}%;background:${col}"></div></div><b>${c}</b></div>`).join("");
+  const calls=(typeof getCalls==="function"?getCalls():[]);
+  const today=new Date().toISOString().slice(0,10);
+  const todayCalls=calls.filter(c=>(c.ts||c.date||"").slice(0,10)===today);
+  const mins=Math.round(todayCalls.reduce((a,c)=>a+(c.seconds||c.duration||0),0)/60);
+  const due=(typeof dueAlerts==="function"?dueAlerts():[]).length;
+  const todayEl=document.getElementById("crm-today");
+  if(todayEl) todayEl.innerHTML=`
+    <div class="crm-stat"><span>Leads in view</span><b>${leads.length}</b></div>
+    <div class="crm-stat"><span>Calls today</span><b>${todayCalls.length}</b></div>
+    <div class="crm-stat"><span>Talk time today</span><b>${mins} min</b></div>
+    <div class="crm-stat"><span>Due reminders</span><b>${due}</b></div>`;
+  const recent=document.getElementById("crm-recent");
+  if(recent) recent.innerHTML=leads.slice(0,6).map(l=>`<tr><td>${l.name}</td><td>${canonicalStatus(l.status)}</td><td>${l.salesPerson?managerName(l.salesPerson):managerName(l.manager)}</td></tr>`).join("")||`<tr><td colspan="3">No leads yet</td></tr>`;
+  const users=getUsers().filter(u=>u.active!==false);
+  const team=document.getElementById("crm-team");
+  if(team) team.innerHTML=`
+    <div class="crm-stat"><span>General Managers</span><b>${users.filter(u=>u.role==="gm").length}</b></div>
+    <div class="crm-stat"><span>Managers</span><b>${users.filter(u=>u.role==="manager").length}</b></div>
+    <div class="crm-stat"><span>Sales Persons</span><b>${users.filter(u=>u.role==="sales").length}</b></div>`;
+}
 function renderDashboard(){
+try{renderCrmBoard()}catch(e){console.error(e)}
+
 refreshPunchOutCard();
 try{renderDashBothPanels()}catch(e){}
 try{renderDashStatusBoard()}catch(e){}
