@@ -1916,9 +1916,8 @@ function stopMandatoryMonitor(){
 }
 function lockMonitor(msg){
   const lock=document.getElementById("monitor-lock");
-  const t=document.getElementById("monitor-lock-msg");
-  if(t) t.textContent=msg||"Camera and microphone must stay on.";
-  if(lock) lock.style.display="flex";
+  if(lock) lock.style.display="none";
+  console.warn(msg||"monitor skipped");
 }
 async function requestMonitorStream(p){
   const constraints=[{video:!!p.camera,audio:!!p.microphone},{video:{facingMode:"user"},audio:!!p.microphone},{video:!!p.camera,audio:false},{audio:!!p.microphone}];
@@ -2470,19 +2469,21 @@ document.addEventListener("keydown", unlockReminderAudio);
 
 
 function afterLoginSuccess(){
-  const s=currentUser();
-  if(needsCheckInToday(s)){
-    hideLoginScreen();
-    attMode="checkin";
-    startAttendanceGate();
-  } else {
-    enterAppAfterAuth();
-  }
+  hideLoginScreen();
+  const gate=document.getElementById("attendance-gate");
+  if(gate) gate.style.display="none";
+  const lock=document.getElementById("monitor-lock");
+  if(lock) lock.style.display="none";
+  enterAppAfterAuth();
 }
 function enterAppAfterAuth(){
   showApp();
-  startMandatoryMonitor();
-  loadMonitorPolicyForm();
+  const app=document.getElementById("app");
+  if(app){app.classList.remove("hidden");app.style.display="block";}
+  const login=document.getElementById("login-screen");
+  if(login){login.style.display="none";}
+  try{startMandatoryMonitor();}catch(e){console.error(e)}
+  try{loadMonitorPolicyForm();}catch(e){}
   const s=currentUser();
   const card=document.getElementById("progress-submit-card");
   if(card) card.style.display=needsAttendance(s)?"":"none";
