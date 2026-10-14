@@ -1,2 +1,7 @@
-# PrabalHousing-CRM
-PrabalHousing Pvt. Ltd. Lead CRM by Pranav Prasoon
+# PrabalHousing CRM Website
+
+Open this after enabling GitHub Pages:
+
+https://hgbsindia.github.io/PrabalHousing-CRM/
+
+Login: superadmin / super123
