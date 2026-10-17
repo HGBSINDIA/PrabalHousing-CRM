@@ -1,7 +1,5 @@
-# PrabalHousing CRM Website
+# PrabalHousing CRM
 
-Open this after enabling GitHub Pages:
-
-https://hgbsindia.github.io/PrabalHousing-CRM/
+Website: https://hgbsindia.github.io/PrabalHousing-CRM/
 
 Login: superadmin / super123
