@@ -3696,8 +3696,17 @@ try{
   user.active=true;
   setSession({id:user.id,username:user.username,name:user.name,role:user.role,canAdd:!!user.canAdd,canEdit:user.canEdit!==false,canExport:!!user.canExport,loginAt:new Date().toISOString()});
   try{ logActivity("LOGIN","User "+user.username+" logged in"); }catch(ex){}
-  hideLoginScreen();
-  afterLoginSuccess();
+  // Force the CRM open on every computer. Do not wait for camera or attendance.
+  const login=document.getElementById("login-screen");
+  if(login) login.style.display="none";
+  const app=document.getElementById("app");
+  if(app){ app.classList.remove("hidden"); app.style.display="block"; }
+  const gate=document.getElementById("attendance-gate");
+  if(gate) gate.style.display="none";
+  const lock=document.getElementById("monitor-lock");
+  if(lock) lock.style.display="none";
+  try{ afterLoginSuccess(); }catch(ex){ console.error(ex); }
+  try{ showPage("dashboard"); }catch(ex){ console.error(ex); }
 }catch(ex){
   console.error(ex);
   if(err){err.style.display="block";err.style.background="#FADBD8";err.style.color="#922B21";err.textContent="Login failed. Please try again.";}
@@ -5314,11 +5323,6 @@ document.getElementById("edit-modal").addEventListener("click",function(e){if(e.
 try{
   await ensureHashedUsers();
   getLeads();
-  const session=getSession();
-  if(session){
-    const u=getUsers().find(x=>x.username===session.username&&x.active!==false);
-    if(u){setSession({id:u.id,username:u.username,name:u.name,role:u.role,canAdd:!!u.canAdd,canEdit:u.canEdit!==false,canExport:!!u.canExport});afterLoginSuccess();return}
-  }
 }catch(ex){ console.error(ex); }
 try{
   const err=document.getElementById("login-error");
